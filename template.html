@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.18/css/dataTables.bootstrap4.min.css" />
+<style>
+
+</style>
+</head>
+<body>
+<div class="container">
+    <table id="books" class="table table-striped table-hover">
+        <thead><tr><th>ISBN</th><th>Title</th><th>Author</th><th>Year</th><th style="width: 10%;">Cover</th></tr></thead>
+        <tbody>
+            {{range .}}
+                <tr id="{{.ID}}" data-search="{{.ID}} {{.ISBN13}} {{.Title}} {{.Author}}" class="{{if .Complete}}ok{{else}}danger{{end}}">
+                    <td>{{if .Complete}}{{.ISBN13}}{{else}}{{.ISBN}}{{end}}</td>
+                    <td><a href="{{.Link}}" target="_blank">{{if .Complete}}{{.Title}}{{else}}{{.Link}}</a>{{end}}</td>
+                    <td>{{.Author}}</td>
+                    <td>{{.Year}}</td>
+                    <td><img src="{{.Image}}" class="img-thumbnail img-responsive"/></td>
+                </tr>
+            {{end}}
+
+        </tbody>
+    </table>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+<script src="https://cdn.datatables.net/1.10.18/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.18/js/dataTables.bootstrap4.min.js"></script>
+<script>
+
+    $(document).ready(function() {
+        $('#books').DataTable();
+    } );
+
+</script>
+</body>
+</html>
