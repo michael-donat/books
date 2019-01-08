@@ -15,7 +15,12 @@ import (
 	"sync"
 )
 
-func writer(input <- chan string, csvFile *os.File, wg *sync.WaitGroup, markAsRead bool) {
+type bookcheck struct {
+	title string
+	read bool
+}
+
+func writer(input <- chan bookcheck, csvFile *os.File, wg *sync.WaitGroup) {
 
 	titleSelector, err := css.Compile("h1.title")
 
@@ -81,9 +86,11 @@ func writer(input <- chan string, csvFile *os.File, wg *sync.WaitGroup, markAsRe
 
 	for {
 		select {
-		case isbn, more := <-input:
+		case bookreq, more := <-input:
 
 			if more == true {
+
+				isbn := bookreq.title
 
 				isbn = strings.Replace(isbn, "-", "", -1)
 				isbn = strings.Replace(isbn, " ", "", -1)
@@ -165,11 +172,11 @@ func writer(input <- chan string, csvFile *os.File, wg *sync.WaitGroup, markAsRe
 					}
 				}
 
-				if b.Title != "" && b.Author != "" && b.Title != "a" {
+				if b.Title != "" &&  b.Title != "a" {
 					b.Complete = true
 				}
 
-				b.Read = markAsRead
+				b.Read = bookreq.read
 
 				b.Link = res.Request.URL.String()
 
@@ -211,11 +218,11 @@ func startScanning(file string, markAsRead bool) {
 		}
 	}
 
-	channel := make(chan string)
+	channel := make(chan bookcheck)
 
 	wg := &sync.WaitGroup{}
 
-	go writer(channel, csvFile, wg, markAsRead)
+	go writer(channel, csvFile, wg)
 
 	for {
 
@@ -239,7 +246,7 @@ func startScanning(file string, markAsRead bool) {
 
 		wg.Add(1)
 
-		channel <- text
+		channel <- bookcheck{title: text, read: markAsRead}
 
 		wg.Wait()
 

@@ -212,11 +212,11 @@ func main() {
 					log.Fatal(err)
 				}
 
-				channel := make(chan string)
+				channel := make(chan bookcheck)
 
 				wg := &sync.WaitGroup{}
 
-				go writer(channel, csvFile, wg, false)
+				go writer(channel, csvFile, wg)
 
 				for _, book := range books {
 					if book.Complete == true {
@@ -225,7 +225,7 @@ func main() {
 
 					wg.Add(1)
 
-					channel <- book.ID
+					channel <- bookcheck{title: book.ID, read: book.Read}
 				}
 
 				wg.Wait()
