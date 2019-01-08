@@ -15,7 +15,7 @@ import (
 	"sync"
 )
 
-func writer(input <- chan string, csvFile *os.File, wg *sync.WaitGroup) {
+func writer(input <- chan string, csvFile *os.File, wg *sync.WaitGroup, markAsRead bool) {
 
 	titleSelector, err := css.Compile("h1.title")
 
@@ -85,8 +85,6 @@ func writer(input <- chan string, csvFile *os.File, wg *sync.WaitGroup) {
 
 			if more == true {
 
-				wg.Add(1)
-
 				isbn = strings.Replace(isbn, "-", "", -1)
 				isbn = strings.Replace(isbn, " ", "", -1)
 
@@ -154,7 +152,9 @@ func writer(input <- chan string, csvFile *os.File, wg *sync.WaitGroup) {
 
 				for _, ele := range publisherSelector.Select(node) {
 					b.Publisher = ele.FirstChild.FirstChild.Data
-					b.Year = string(yearRegexp.ReplaceAll([]byte(ele.FirstChild.NextSibling.Data), []byte{}))
+					if ele.FirstChild.NextSibling != nil {
+						b.Year = string(yearRegexp.ReplaceAll([]byte(ele.FirstChild.NextSibling.Data), []byte{}))
+					}
 				}
 
 				for _, ele := range imageSelector.Select(node) {
@@ -165,9 +165,11 @@ func writer(input <- chan string, csvFile *os.File, wg *sync.WaitGroup) {
 					}
 				}
 
-				if b.Title != "" && b.Author != "" {
+				if b.Title != "" && b.Author != "" && b.Title != "a" {
 					b.Complete = true
 				}
+
+				b.Read = markAsRead
 
 				b.Link = res.Request.URL.String()
 
@@ -190,7 +192,7 @@ func writer(input <- chan string, csvFile *os.File, wg *sync.WaitGroup) {
 
 }
 
-func startScanning(file string) {
+func startScanning(file string, markAsRead bool) {
 
 	csvFile, err := os.OpenFile(file, os.O_RDWR|os.O_APPEND, os.ModePerm)
 
@@ -213,9 +215,13 @@ func startScanning(file string) {
 
 	wg := &sync.WaitGroup{}
 
-	go writer(channel, csvFile, wg)
+	go writer(channel, csvFile, wg, markAsRead)
 
 	for {
+
+		if markAsRead {
+			log.Println("Marking books as read.")
+		}
 
 		scanner := bufio.NewScanner(os.Stdin)
 
@@ -231,7 +237,11 @@ func startScanning(file string) {
 			return
 		}
 
+		wg.Add(1)
+
 		channel <- text
+
+		wg.Wait()
 
 	}
 }

@@ -50,23 +50,44 @@ func formatISBN(s string) string {
 
 	var buffer bytes.Buffer
 	ss := []rune(s)
-	buffer.WriteRune(ss[0])
-	buffer.WriteRune(ss[1])
-	buffer.WriteRune(ss[2])
-	buffer.WriteRune('-')
-	buffer.WriteRune(ss[3])
-	buffer.WriteRune(ss[4])
-	buffer.WriteRune('-')
-	buffer.WriteRune(ss[5])
-	buffer.WriteRune(ss[6])
-	buffer.WriteRune(ss[7])
-	buffer.WriteRune(ss[8])
-	buffer.WriteRune('-')
-	buffer.WriteRune(ss[9])
-	buffer.WriteRune(ss[10])
-	buffer.WriteRune(ss[11])
-	buffer.WriteRune('-')
-	buffer.WriteRune(ss[12])
+
+	if len(ss) == 13 {
+
+		buffer.WriteRune(ss[0])
+		buffer.WriteRune(ss[1])
+		buffer.WriteRune(ss[2])
+		buffer.WriteRune('-')
+		buffer.WriteRune(ss[3])
+		buffer.WriteRune(ss[4])
+		buffer.WriteRune('-')
+		buffer.WriteRune(ss[5])
+		buffer.WriteRune(ss[6])
+		buffer.WriteRune(ss[7])
+		buffer.WriteRune(ss[8])
+		buffer.WriteRune('-')
+		buffer.WriteRune(ss[9])
+		buffer.WriteRune(ss[10])
+		buffer.WriteRune(ss[11])
+		buffer.WriteRune('-')
+		buffer.WriteRune(ss[12])
+
+	} else if len(ss) == 10 {
+		buffer.WriteRune(ss[0])
+		buffer.WriteRune(ss[1])
+		buffer.WriteRune('-')
+		buffer.WriteRune(ss[2])
+		buffer.WriteRune(ss[3])
+		buffer.WriteRune(ss[4])
+		buffer.WriteRune(ss[5])
+		buffer.WriteRune('-')
+		buffer.WriteRune(ss[6])
+		buffer.WriteRune(ss[7])
+		buffer.WriteRune(ss[8])
+		buffer.WriteRune('-')
+		buffer.WriteRune(ss[9])
+	} else {
+		return s
+	}
 
 	return buffer.String()
 }
@@ -82,6 +103,7 @@ type Book struct {
 	Link      string `url:"entry.1895009924"`
 	Image     string `url:"entry.2071078398"`
 	Complete  bool
+	Read bool
 }
 
 func (b *Book) ISBN() string {
@@ -158,8 +180,13 @@ func main() {
 		},
 		{
 			Name: "scan",
+			Flags: []cli.Flag{
+				cli.BoolTFlag{
+					Name: "mark-as-read",
+				},
+			},
 			Action: func(ctx *cli.Context) error {
-				startScanning(ctx.GlobalString("data-file"))
+				startScanning(ctx.GlobalString("data-file"), ctx.BoolT("mark-as-read"))
 				return nil
 			},
 		},
@@ -179,12 +206,14 @@ func main() {
 
 				wg := &sync.WaitGroup{}
 
-				go writer(channel, csvFile, wg)
+				go writer(channel, csvFile, wg, false)
 
 				for _, book := range books {
 					if book.Complete == true {
 						continue
 					}
+
+					wg.Add(1)
 
 					channel <- book.ID
 				}
