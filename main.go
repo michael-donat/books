@@ -25,6 +25,16 @@ func dedupe(file string) {
 			continue
 		}
 
+		if existing && book.Complete {
+			// replace
+			for idx, override := range deduped {
+				if override.ID == book.ID {
+					deduped[idx] = book
+				}
+			}
+			continue
+		}
+
 		deduped = append(deduped, book)
 		state[book.ID] = book.Complete
 
