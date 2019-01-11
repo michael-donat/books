@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
+	"fmt"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gocarina/gocsv"
 	"github.com/urfave/cli"
@@ -9,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -197,6 +200,51 @@ func main() {
 			},
 			Action: func(ctx *cli.Context) error {
 				startScanning(ctx.GlobalString("data-file"), ctx.BoolT("mark-as-read"))
+				return nil
+			},
+		},
+		{
+			Name: "scan-list",
+			Action: func(ctx *cli.Context) error {
+				books := loadBooks(ctx.GlobalString("data-file"))
+
+				booksByID := map[string]*Book{}
+
+				booksOutput := []*Book{}
+
+				for _, book := range books {
+					booksByID[book.ID] = book
+				}
+
+				scanner := bufio.NewScanner(os.Stdin)
+
+				for {
+
+					fmt.Print("Enter ISBN: ")
+
+					scanner.Scan()
+
+					text := scanner.Text()
+
+					if len(text) == 0 {
+
+						for _, o := range booksOutput {
+							fmt.Printf("%s - %s\n", o.Author, o.Title)
+						}
+
+						return nil
+					}
+
+					text = strings.Replace(text, "-", "", -1)
+					text = strings.Replace(text, " ", "", -1)
+
+					if book, found := booksByID[text]; found {
+						booksOutput = append(booksOutput, book)
+					} else {
+						log.Println("Book not found in list")
+					}
+				}
+
 				return nil
 			},
 		},

@@ -224,13 +224,13 @@ func startScanning(file string, markAsRead bool) {
 
 	go writer(channel, csvFile, wg)
 
+	scanner := bufio.NewScanner(os.Stdin)
+
 	for {
 
 		if markAsRead {
 			log.Println("Marking books as read.")
 		}
-
-		scanner := bufio.NewScanner(os.Stdin)
 
 		fmt.Print("Enter ISBN: ")
 
